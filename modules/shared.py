@@ -214,18 +214,23 @@ def is_chat():
 # Loading model-specific settings
 with Path(f'{args.model_dir}/config.yaml') as p:
     if p.exists():
-        model_config = yaml.safe_load(open(p, 'r').read())
+        default_model_config = yaml.safe_load(open(p, 'r').read())
     else:
-        model_config = {}
+        default_model_config = {}
+
+default_model_config = OrderedDict(default_model_config)
 
 # Applying user-defined model settings
-with Path(f'{args.model_dir}/config-user.yaml') as p:
-    if p.exists():
-        user_config = yaml.safe_load(open(p, 'r').read())
-        for k in user_config:
-            if k in model_config:
-                model_config[k].update(user_config[k])
-            else:
-                model_config[k] = user_config[k]
+def model_config():
+    model_config = default_model_config.copy()
 
-model_config = OrderedDict(model_config)
+    with Path(f'{args.model_dir}/config-user.yaml') as p:
+        if p.exists():
+            user_config = yaml.safe_load(open(p, 'r').read())
+            for k in user_config:
+                if k in model_config:
+                    model_config[k].update(user_config[k])
+                else:
+                    model_config[k] = user_config[k]
+
+        return OrderedDict(model_config)
